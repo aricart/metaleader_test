@@ -1,8 +1,8 @@
 import {
   AckPolicy,
+  AdvisoryKind,
   connect,
   consumerOpts,
-  Msg,
   nuid,
   PubAck,
 } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/src/mod.ts";
@@ -20,6 +20,23 @@ const { stream, subj } = await initStream(nc, nuid.next(), {
   num_replicas: 3,
 });
 const jsm = await nc.jetstreamManager();
+
+(async () => {
+  for await (const a of jsm.advisories()) {
+    switch (a.kind) {
+      case AdvisoryKind.StreamLeaderElected:
+      case AdvisoryKind.ConsumerLeaderElected:
+        const data = a.data as { leader: string; replicas: { name: string }[] };
+        const { leader } = data;
+        const replicas = data.replicas?.length;
+        console.log(`${a.kind}: ${leader}: ${replicas} replicas`);
+        break;
+      default:
+        console.log(a.kind);
+    }
+  }
+})().then();
+
 const si = await jsm.streams.info(stream);
 assertEquals(si.config.num_replicas, 3);
 
@@ -40,6 +57,7 @@ const opts = consumerOpts();
 opts.ackExplicit();
 opts.durable("opts");
 opts.numReplicas(3);
+opts.idleHeartbeat(2000);
 
 const sub = await js.pullSubscribe(subj, opts);
 (async () => {
@@ -53,21 +71,8 @@ const sub = await js.pullSubscribe(subj, opts);
 sub.closed.then(() => console.log("closed triggered"));
 
 setInterval(() => {
-  sub.pull({ expires: 1000, batch: 2 });
-}, 1000);
-
-let leader = "";
-setInterval(() => {
-  sub.consumerInfo().then((ci) => {
-    if (leader !== ci.cluster?.leader) {
-      leader = ci.cluster?.leader || "unknown";
-      console.log("new leader", leader);
-    }
-  })
-    .catch((err) => {
-      console.log(`error inspecting leader: ${err.message}`);
-    });
-}, 1000);
+  sub.pull({ expires: 10000, batch: 2 });
+}, 10000);
 
 (async () => {
   for await (const s of nc.status()) {

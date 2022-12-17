@@ -1,4 +1,4 @@
-import { AckPolicy, connect, consumerOpts, nuid } from "nats";
+import { AckPolicy, AdvisoryKind, connect, consumerOpts, nuid } from "nats";
 import { delay } from "nats/lib/nats-base-client/util.js";
 
 let nc = await connect({
@@ -7,6 +7,23 @@ let nc = await connect({
   maxReconnectAttempts: -1,
 });
 const jsm = await nc.jetstreamManager();
+
+(async () => {
+  for await (const a of jsm.advisories()) {
+    switch (a.kind) {
+      case AdvisoryKind.StreamLeaderElected:
+      case AdvisoryKind.ConsumerLeaderElected:
+        const data = a.data;
+        const { leader } = data;
+        const replicas = data.replicas?.length;
+        console.log(`${a.kind}: ${leader}: ${replicas} replicas`);
+        break;
+      default:
+        console.log(a.kind);
+    }
+  }
+})().then();
+
 const subj = nuid.next();
 const stream = subj;
 await jsm.streams.add({ name: subj, subjects: [subj], num_replicas: 3 });
@@ -44,19 +61,6 @@ sub.closed.then(() => console.log("closed triggered"));
 
 setInterval(() => {
   sub.pull({ expires: 1000, batch: 2 });
-}, 1000);
-
-let leader = "";
-setInterval(() => {
-  sub.consumerInfo().then((ci) => {
-    if (leader !== ci.cluster?.leader) {
-      leader = ci.cluster?.leader || "unknown";
-      console.log("new leader", leader);
-    }
-  })
-    .catch((err) => {
-      console.log(`error inspecting leader: ${err.message}`);
-    });
 }, 1000);
 
 (async () => {
