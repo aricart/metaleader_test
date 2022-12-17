@@ -27,7 +27,7 @@ const jsm = await nc.jetstreamManager();
       case AdvisoryKind.StreamLeaderElected:
       case AdvisoryKind.ConsumerLeaderElected: {
         const data = a.data as { leader: string; replicas: { name: string }[] };
-        const {leader} = data;
+        const { leader } = data;
         const replicas = data.replicas?.length;
         console.log(`${a.kind}: ${leader}: ${replicas} replicas`);
         break;
@@ -72,13 +72,11 @@ const sub = await js.pullSubscribe(subj, opts);
 sub.closed.then(() => console.log("closed triggered"));
 
 setInterval(() => {
-  sub.pull({ expires: 10000, batch: 2 });
-}, 10000);
+  sub.pull({ expires: 500, batch: 2 });
+}, 500);
 
 (async () => {
   for await (const s of nc.status()) {
     console.log(s);
   }
 })();
-
-await delay(50000);
