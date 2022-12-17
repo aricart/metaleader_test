@@ -10,7 +10,7 @@ import { initStream } from "https://raw.githubusercontent.com/nats-io/nats.deno/
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { delay } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/nats-base-client/internal_mod.ts";
 
-let nc = await connect({
+const nc = await connect({
   port: 4222,
   reconnect: true,
   maxReconnectAttempts: -1,
@@ -25,12 +25,13 @@ const jsm = await nc.jetstreamManager();
   for await (const a of jsm.advisories()) {
     switch (a.kind) {
       case AdvisoryKind.StreamLeaderElected:
-      case AdvisoryKind.ConsumerLeaderElected:
+      case AdvisoryKind.ConsumerLeaderElected: {
         const data = a.data as { leader: string; replicas: { name: string }[] };
-        const { leader } = data;
+        const {leader} = data;
         const replicas = data.replicas?.length;
         console.log(`${a.kind}: ${leader}: ${replicas} replicas`);
         break;
+      }
       default:
         console.log(a.kind);
     }
@@ -40,7 +41,7 @@ const jsm = await nc.jetstreamManager();
 const si = await jsm.streams.info(stream);
 assertEquals(si.config.num_replicas, 3);
 
-let js = nc.jetstream();
+const js = nc.jetstream();
 const data: Promise<PubAck>[] = [];
 for (let i = 0; i < 1000; i++) {
   data.push(js.publish(subj));

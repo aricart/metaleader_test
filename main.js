@@ -1,7 +1,7 @@
 import { AckPolicy, AdvisoryKind, connect, consumerOpts, nuid } from "nats";
 import { delay } from "nats/lib/nats-base-client/util.js";
 
-let nc = await connect({
+const nc = await connect({
   port: 4222,
   reconnect: true,
   maxReconnectAttempts: -1,
@@ -12,12 +12,13 @@ const jsm = await nc.jetstreamManager();
   for await (const a of jsm.advisories()) {
     switch (a.kind) {
       case AdvisoryKind.StreamLeaderElected:
-      case AdvisoryKind.ConsumerLeaderElected:
+      case AdvisoryKind.ConsumerLeaderElected: {
         const data = a.data;
-        const { leader } = data;
+        const {leader} = data;
         const replicas = data.replicas?.length;
         console.log(`${a.kind}: ${leader}: ${replicas} replicas`);
         break;
+      }
       default:
         console.log(a.kind);
     }
@@ -28,9 +29,7 @@ const subj = nuid.next();
 const stream = subj;
 await jsm.streams.add({ name: subj, subjects: [subj], num_replicas: 3 });
 
-const si = await jsm.streams.info(stream);
-
-let js = nc.jetstream();
+const js = nc.jetstream();
 const data = [];
 for (let i = 0; i < 1000; i++) {
   data.push(js.publish(subj));
