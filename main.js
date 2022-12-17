@@ -1,30 +1,20 @@
-import {
-  AckPolicy,
-  connect,
-  consumerOpts,
-  Msg,
-  nuid,
-  PubAck,
-} from "https://raw.githubusercontent.com/nats-io/nats.deno/main/src/mod.ts";
-import { initStream } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/tests/jstest_util.ts";
-import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { delay } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/nats-base-client/internal_mod.ts";
+import { AckPolicy, connect, consumerOpts, nuid } from "nats";
+import { delay } from "nats/lib/nats-base-client/util.js";
 
 let nc = await connect({
   port: 4222,
   reconnect: true,
   maxReconnectAttempts: -1,
 });
-
-const { stream, subj } = await initStream(nc, nuid.next(), {
-  num_replicas: 3,
-});
 const jsm = await nc.jetstreamManager();
+const subj = nuid.next();
+const stream = subj;
+await jsm.streams.add({ name: subj, subjects: [subj], num_replicas: 3 });
+
 const si = await jsm.streams.info(stream);
-assertEquals(si.config.num_replicas, 3);
 
 let js = nc.jetstream();
-const data: Promise<PubAck>[] = [];
+const data = [];
 for (let i = 0; i < 1000; i++) {
   data.push(js.publish(subj));
 }

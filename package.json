@@ -1,0 +1,20 @@
+{
+  "name": "metaleader_test",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "- install [Deno](https://deno.land/): `curl -fsSL https://deno.land/x/install/install.sh | sh` - run these commands on one terminal each:   - `nats-server -c a.conf`   - `nats-server -c b.conf`   - `nats-server -c c.conf`   - `deno run -A https://raw.githubusercontent.com/aricart/metaleader_test/main/main.ts`",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//aricart/metaleader_test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nats": "^2.9.2"
+  }
+}
