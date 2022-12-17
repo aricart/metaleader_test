@@ -8,7 +8,6 @@ import {
 } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/src/mod.ts";
 import { initStream } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/tests/jstest_util.ts";
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { delay } from "https://raw.githubusercontent.com/nats-io/nats.deno/main/nats-base-client/internal_mod.ts";
 
 const nc = await connect({
   port: 4222,

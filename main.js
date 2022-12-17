@@ -1,5 +1,4 @@
 import { AckPolicy, AdvisoryKind, connect, consumerOpts, nuid } from "nats";
-import { delay } from "nats/lib/nats-base-client/util.js";
 
 const nc = await connect({
   port: 4222,
